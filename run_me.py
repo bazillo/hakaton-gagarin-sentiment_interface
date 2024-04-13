@@ -3,7 +3,8 @@ import pathlib
 import typing as tp
 
 import final_solution
-import final_solution.solution_stupid
+
+# import final_solution.solution_stupid
 
 
 PATH_TO_TEST_DATA = pathlib.Path("data") / "test_texts.json"
@@ -24,7 +25,8 @@ def save_data(data, path: pathlib.PosixPath = PATH_TO_OUTPUT_DATA):
 
 def main():
     texts = load_data()
-    scores = final_solution.solution.score_texts(texts)
+    scores = list(map(lambda x: (int(x[0]), int(x[1])), list(final_solution.solution.score_texts(texts))))
+    print(scores)
     save_data(scores)
 
 
