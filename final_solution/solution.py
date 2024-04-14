@@ -57,8 +57,7 @@ def score_texts(
     path_to_solution = pathlib.Path(__file__).parent
     preprocessor = ner.NER(f"{path_to_solution}/ner/new_names_and_synonyms.csv")
 
-    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    device = "cpu"
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     rubert_tiny = "cointegrated/rubert-tiny2"
     model = TransformerClassificationModel(rubert_tiny, num_classes=5, num_dense_layers=2).to(device)
     tokenizer_tiny = AutoTokenizer.from_pretrained(rubert_tiny)

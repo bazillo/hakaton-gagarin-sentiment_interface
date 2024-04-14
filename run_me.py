@@ -2,6 +2,8 @@ import json
 import pathlib
 import typing as tp
 
+import requests
+
 import final_solution
 
 # import final_solution.solution_stupid
@@ -23,10 +25,17 @@ def save_data(data, path: pathlib.PosixPath = PATH_TO_OUTPUT_DATA):
         json.dump(data, f, indent=1, ensure_ascii=False)
 
 
+def download_file_from_google_drive(url):
+    # Making request to the download URL
+    response = requests.get(url)
+
+    # Save the content with name
+    with open('./final_solution/absa/rubert_tiny_2fc', 'wb') as file:  # Ensure the correct filename extension
+        file.write(response.content)
+
 def main():
     texts = load_data()
     scores = final_solution.solution.score_texts(texts)
-    print(scores)
     save_data(scores)
 
 

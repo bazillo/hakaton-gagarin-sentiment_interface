@@ -4,6 +4,7 @@
 
 * run_me должен запускаться командой 
 ```bash
+python download_model.py
 python run_me.py
 ```
 
