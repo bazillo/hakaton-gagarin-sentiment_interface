@@ -1,3 +1,4 @@
+import pathlib
 import typing as tp
 
 import torch
@@ -21,6 +22,22 @@ def to_df(texts: tp.Iterable[str]) -> pd.DataFrame:
     return pd.DataFrame({"MessageText": texts})
 
 
+def score_text(message: str, preprocessor, model, tokenizer, device):
+    sentiment = to_df(message)
+    sentiment = preprocessor.preprocessing_dataset(sentiment)
+    data = {
+        'text': sentiment["MessageText"],
+        'aspect': sentiment["CompanyName"]
+    }
+
+    df = pd.DataFrame(data)
+    df = df.reset_index()
+    df = df.drop(["index"], axis=1)
+    dataset = Dataset.from_pandas(df, preserve_index=False)
+    return list(map(lambda x: (int(x[0]), float(x[1])),
+                    list(zip(sentiment['CompanyId'], evaluate(model, tokenizer, dataset, device)))))
+
+
 def score_texts(
         messages: tp.Iterable[str], *args, **kwargs
 ) -> tp.Iterable[MessageResultType]:
@@ -36,24 +53,14 @@ def score_texts(
     >>> assert all([len(m) < 10 ** 11 for m in messages]) # all messages are shorter than 2048 characters
     """
     # preprocessing
-    sentiment = to_df(messages)
-    preprocessor = ner.NER("./final_solution/ner/new_names_and_synonyms.csv")
-    sentiment = preprocessor.preprocessing_dataset(sentiment)
-    data = {
-        'text': sentiment["MessageText"],
-        'aspect': sentiment["CompanyName"]
-    }
 
-    df = pd.DataFrame(data)
-    df = df.reset_index()
-    df = df.drop(["index"], axis=1)
-    dataset = Dataset.from_pandas(df,  preserve_index=False)
+    path_to_solution = pathlib.Path(__file__).parent
+    preprocessor = ner.NER(f"{path_to_solution}/ner/new_names_and_synonyms.csv")
 
     # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     device = "cpu"
     rubert_tiny = "cointegrated/rubert-tiny2"
     model = TransformerClassificationModel(rubert_tiny, num_classes=5, num_dense_layers=2).to(device)
     tokenizer_tiny = AutoTokenizer.from_pretrained(rubert_tiny)
-    model.load_state_dict(torch.load("./final_solution/absa/rubert_tiny_2fc", map_location=torch.device(device)))
-
-    return zip(sentiment['CompanyId'], evaluate(model, tokenizer_tiny, dataset, device))
+    model.load_state_dict(torch.load(f"{path_to_solution}/absa/rubert_tiny_2fc", map_location=torch.device(device)))
+    return [score_text([message], preprocessor, model, tokenizer_tiny, device) for message in messages]

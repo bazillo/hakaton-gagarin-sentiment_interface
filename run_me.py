@@ -25,7 +25,7 @@ def save_data(data, path: pathlib.PosixPath = PATH_TO_OUTPUT_DATA):
 
 def main():
     texts = load_data()
-    scores = list(map(lambda x: (int(x[0]), int(x[1])), list(final_solution.solution.score_texts(texts))))
+    scores = final_solution.solution.score_texts(texts)
     print(scores)
     save_data(scores)
 
